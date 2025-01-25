@@ -13,7 +13,7 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @EnableTransactionManagement // This annotation tells the spring to find the transactional annotation
-@EnableScheduling
+@EnableScheduling // This annotation tells the spring to find the scheduled annotation
 public class JournalAppApplication {
 
 	public static void main(String[] args) {

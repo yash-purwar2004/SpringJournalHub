@@ -1,5 +1,6 @@
 package com.project.journalApp.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,33 +13,36 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.project.journalApp.service.UserDetailsServiceImpl;
+import com.project.journalApp.filter.JwtFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SpringSecurityConfig {
 
-    public SpringSecurityConfig(UserDetailsServiceImpl userDetailsService) {
-    }
+    @Autowired
+    private JwtFilter jwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
+        http
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/public/**").permitAll() // Allow /user without authentication
-                        .requestMatchers("/journal/**", "/user").authenticated()
+                        .requestMatchers("/**").permitAll() // Allow /public/** without authentication
+                        .requestMatchers("/journal/**", "/user/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session management
-                .build();
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // Stateless session management
+
+        // Add the JWT filter before the UsernamePasswordAuthenticationFilter
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
-    
-    
-    
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -48,5 +52,4 @@ public class SpringSecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
-
 }

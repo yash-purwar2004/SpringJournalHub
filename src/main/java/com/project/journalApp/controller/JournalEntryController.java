@@ -22,6 +22,9 @@ import com.project.journalApp.entity.User;
 import com.project.journalApp.service.JournalEntryService;
 import com.project.journalApp.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 // A special type of component which is used to handle our HTTP Requests
 
 // We write special end points in this class as a method
@@ -29,6 +32,7 @@ import com.project.journalApp.service.UserService;
 
 @RestController
 @RequestMapping("/journal")
+@Tag(name = "Journal Entry APIs", description = "Create, Read, Update, and Delete journal entries")
 public class JournalEntryController {
 
     @Autowired
@@ -38,6 +42,7 @@ public class JournalEntryController {
     private UserService userService;
 
     @GetMapping
+    @Operation(summary = "Get all journal entries of the authenticated user")
     public ResponseEntity<?> getAllJournalEntriesOfUser(){
         org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String authenticatedUserName = authentication.getName(); // Extract authenticated username
@@ -52,13 +57,15 @@ public class JournalEntryController {
 
     // Find Journal Entry by Id
     @GetMapping("id/{myId}")
-    public ResponseEntity<?> getJournalEntryById(@PathVariable ObjectId myId){
+    @Operation(summary = "Get a journal entry by its id")
+    public ResponseEntity<?> getJournalEntryById(@PathVariable String myId){
+        ObjectId id = new ObjectId(myId);
         org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String authenticatedUserName = authentication.getName();
         User user = userService.findByUserName(authenticatedUserName);
-        List<JournalEntry> collect = user.getJournalEntries().stream().filter(x->x.getId().equals(myId)).collect(Collectors.toList());
+        List<JournalEntry> collect = user.getJournalEntries().stream().filter(x->x.getId().equals(id)).collect(Collectors.toList());
         if(!collect.isEmpty()){
-            Optional<JournalEntry> journalEntry = journalEntryService.findById(myId);
+            Optional<JournalEntry> journalEntry = journalEntryService.findById(id);
             if(journalEntry.isPresent()){
                 return new ResponseEntity<>(journalEntry.get(), HttpStatus.OK);
                }
@@ -69,6 +76,7 @@ public class JournalEntryController {
 
     // It's like saying, "Hey spring, please take the data from the request and turn it into a java object that I can use in my code"
     @PostMapping
+    @Operation(summary = "Create a journal entry")
     public ResponseEntity<?> createEntry(@RequestBody JournalEntry myEntry){
         try{
             org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -85,22 +93,26 @@ public class JournalEntryController {
 
     // // Delete the entry
     @DeleteMapping("id/{myId}")
-    public ResponseEntity<?> deleteJournalEntryById(@PathVariable ObjectId myId){
+    @Operation(summary = "Delete a journal entry by its id")
+    public ResponseEntity<?> deleteJournalEntryById(@PathVariable String myId){
+        ObjectId id = new ObjectId(myId);
         org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String authenticatedUserName = authentication.getName();
-        journalEntryService.deleteJournalEntryById(myId, authenticatedUserName);
+        journalEntryService.deleteJournalEntryById(id, authenticatedUserName);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     // Update the entry
     @PutMapping("id/{id}")
-    public ResponseEntity<?> updateJournalById(@PathVariable ObjectId id, @RequestBody JournalEntry newEntry){
+    @Operation(summary = "Update a journal entry by its id")
+    public ResponseEntity<?> updateJournalById(@PathVariable String id, @RequestBody JournalEntry newEntry){
+        ObjectId myId = new ObjectId(id);
         org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String authenticatedUserName = authentication.getName();
         User user = userService.findByUserName(authenticatedUserName);
-        List<JournalEntry> collect = user.getJournalEntries().stream().filter(x->x.getId().equals(id)).collect(Collectors.toList());
+        List<JournalEntry> collect = user.getJournalEntries().stream().filter(x->x.getId().equals(myId)).collect(Collectors.toList());
         if(!collect.isEmpty()){
-            Optional<JournalEntry> journalEntry = journalEntryService.findById(id);
+            Optional<JournalEntry> journalEntry = journalEntryService.findById(myId);
             if(journalEntry.isPresent()){
                 JournalEntry old = journalEntry.get();
                 old.setTitle(newEntry.getTitle()!=null && !newEntry.getTitle().equals("") ? newEntry.getTitle(): old.getTitle());

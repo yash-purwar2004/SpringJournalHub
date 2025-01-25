@@ -13,6 +13,9 @@ import com.project.journalApp.repository.UserRepository;
 import com.project.journalApp.service.UserService;
 import com.project.journalApp.service.WeatherService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/user")
+@Tag(name = "User APIs", description = "Read, Update, and Delete user details")
 public class UserController {
 
     @Autowired
@@ -36,6 +40,7 @@ public class UserController {
     private WeatherService weatherService;
 
     @PutMapping
+    @Operation(summary = "Update user details")
     public ResponseEntity<?> updateUser(@RequestBody User user) {
         // Retrieve the authenticated user's details from the Security Context
         org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -56,6 +61,7 @@ public class UserController {
     }
 
     @DeleteMapping
+    @Operation(summary = "Delete user details")
     public ResponseEntity<?> deleteUserById(){
         org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         userRepository.deleteByUserName(authentication.getName());
@@ -63,6 +69,7 @@ public class UserController {
     }
 
     @GetMapping("/{city}")
+    @Operation(summary = "Get weather details for a city")
     public ResponseEntity<?> greeting(@PathVariable String city) {
     org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
